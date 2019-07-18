@@ -130,6 +130,8 @@ static NSURLCredential* clientAuthenticationCredential;
 
       WKUserScript *script = [[WKUserScript alloc] initWithSource:source injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
       [wkWebViewConfig.userContentController addUserScript:script];
+      WKUserScript *customScript = [[WKUserScript alloc] initWithSource:_userScript injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
+      [wkWebViewConfig.userContentController addUserScript:customScript];
     }
 
     wkWebViewConfig.allowsInlineMediaPlayback = _allowsInlineMediaPlayback;
