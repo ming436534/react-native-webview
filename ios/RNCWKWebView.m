@@ -797,6 +797,8 @@ static NSURLCredential* clientAuthenticationCredential;
         callback([NSString stringWithFormat:@"%@", result]);
       }
     } else {
+      NSLog(@"%@", error);
+      NSLog(@"%@", js);
       RCTLogError(@"Error evaluating injectedJavaScript: This is possibly due to an unsupported return type. Try adding true to the end of your injectedJavaScript string.");
     }
   }];

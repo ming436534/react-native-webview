@@ -211,6 +211,20 @@ class WebView extends React.Component<AndroidWebViewProps, State> {
       );
     }
   };
+  
+  onReceivedSslError = async (event: WebViewErrorEvent) => {
+    let shouldProceed = false;
+    if (this.props.onReceivedSslError) {
+      shouldProceed = await this.props.onReceivedSslError(event);
+    }
+    const handle = this.getWebViewHandle();
+    if (!handle) return;
+    UIManager.dispatchViewManagerCommand(
+      handle,
+      this.getCommands().resolveSslError,
+      [Boolean(shouldProceed)]
+    );
+  };
 
   render() {
     const {
@@ -275,6 +289,7 @@ class WebView extends React.Component<AndroidWebViewProps, State> {
         onLoadingProgress={this.onLoadingProgress}
         onLoadingStart={this.onLoadingStart}
         onMessage={this.onMessage}
+        onReceivedSslError={this.onReceivedSslError}
         onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
         ref={this.webViewRef}
         // TODO: find a better way to type this.

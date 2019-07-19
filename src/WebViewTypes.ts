@@ -18,6 +18,7 @@ export interface WebViewCommands {
   postMessage: Function;
   injectJavaScript: Function;
   loadUrl: Function;
+  resolveSslError: Function;
 }
 
 export interface CustomUIManager extends UIManagerStatic {
@@ -245,6 +246,7 @@ export interface AndroidNativeWebViewProps extends CommonNativeWebViewProps {
   textZoom?: number;
   thirdPartyCookiesEnabled?: boolean;
   urlPrefixesForDefaultIntent?: ReadonlyArray<string>;
+  onReceivedSslError?: (event: WebViewErrorEvent) => void;
 }
 
 export interface IOSNativeWebViewProps extends CommonNativeWebViewProps {
@@ -535,6 +537,14 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
    * Sets ability to open fullscreen videos on Android devices.
   */
   allowsFullscreenVideo?: boolean;
+  /**
+   * If true, declare not to override url loading anymore
+  */
+ disableOverrideUrlLoading?: boolean;
+ /**
+  * Handle Ssl error, if return true, ignore the error and load the website
+ */
+  onReceivedSslError?: (event: WebViewErrorEvent) => Promise<boolean>;
 }
 
 export interface WebViewSharedProps extends ViewProps {

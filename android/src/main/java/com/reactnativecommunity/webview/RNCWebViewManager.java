@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
+import android.net.http.SslCertificate;
+import android.net.http.SslError;
 import android.os.Build;
 import android.os.Environment;
 import androidx.annotation.RequiresApi;
@@ -22,6 +24,7 @@ import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
 import android.webkit.GeolocationPermissions;
 import android.webkit.JavascriptInterface;
+import android.webkit.SslErrorHandler;
 import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -51,6 +54,7 @@ import com.facebook.react.uimanager.annotations.ReactProp;
 import com.facebook.react.uimanager.events.ContentSizeChangeEvent;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcher;
+import com.reactnativecommunity.webview.events.ReceivedSslError;
 import com.reactnativecommunity.webview.events.TopLoadingErrorEvent;
 import com.reactnativecommunity.webview.events.TopLoadingFinishEvent;
 import com.reactnativecommunity.webview.events.TopLoadingProgressEvent;
@@ -105,6 +109,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
   public static final int COMMAND_POST_MESSAGE = 5;
   public static final int COMMAND_INJECT_JAVASCRIPT = 6;
   public static final int COMMAND_LOAD_URL = 7;
+  public static final int COMMAND_RESOLVE_SSL_ERROR = 8;
   protected static final String REACT_CLASS = "RNCWebView";
   protected static final String HTML_ENCODING = "UTF-8";
   protected static final String HTML_MIME_TYPE = "text/html";
@@ -328,6 +333,10 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
   public void setMessagingEnabled(WebView view, boolean enabled) {
     ((RNCWebView) view).setMessagingEnabled(enabled);
   }
+  @ReactProp(name = "disableOverrideUrlLoading")
+  public void setDisableOverrideUrlLoading(WebView view, @Nullable Boolean isDisable) {
+    ((RNCWebView) view).getRNCWebViewClient().disableOverrideUrlLoading = isDisable;
+  }
 
   @ReactProp(name = "source")
   public void setSource(WebView view, @Nullable ReadableMap source) {
@@ -454,6 +463,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
     }
     export.put(TopLoadingProgressEvent.EVENT_NAME, MapBuilder.of("registrationName", "onLoadingProgress"));
     export.put(TopShouldStartLoadWithRequestEvent.EVENT_NAME, MapBuilder.of("registrationName", "onShouldStartLoadWithRequest"));
+    export.put(ReceivedSslError.EVENT_NAME, MapBuilder.of("registrationName", "onReceivedSslError"));
     export.put(ScrollEventType.getJSEventName(ScrollEventType.SCROLL), MapBuilder.of("registrationName", "onScroll"));
     return export;
   }
@@ -461,7 +471,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
   @Override
   public @Nullable
   Map<String, Integer> getCommandsMap() {
-    return MapBuilder.of(
+    Map m = MapBuilder.of(
       "goBack", COMMAND_GO_BACK,
       "goForward", COMMAND_GO_FORWARD,
       "reload", COMMAND_RELOAD,
@@ -470,10 +480,13 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
       "injectJavaScript", COMMAND_INJECT_JAVASCRIPT,
       "loadUrl", COMMAND_LOAD_URL
     );
+    m.put("resolveSslError", COMMAND_RESOLVE_SSL_ERROR);
+    return m;
   }
 
   @Override
   public void receiveCommand(WebView root, int commandId, @Nullable ReadableArray args) {
+    RNCWebView reactWebView;
     switch (commandId) {
       case COMMAND_GO_BACK:
         root.goBack();
@@ -489,7 +502,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         break;
       case COMMAND_POST_MESSAGE:
         try {
-          RNCWebView reactWebView = (RNCWebView) root;
+          reactWebView = (RNCWebView) root;
           JSONObject eventInitDict = new JSONObject();
           eventInitDict.put("data", args.getString(0));
           reactWebView.evaluateJavascriptWithFallback("(function () {" +
@@ -508,7 +521,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         }
         break;
       case COMMAND_INJECT_JAVASCRIPT:
-        RNCWebView reactWebView = (RNCWebView) root;
+        reactWebView = (RNCWebView) root;
         reactWebView.evaluateJavascriptWithFallback(args.getString(0));
         break;
       case COMMAND_LOAD_URL:
@@ -516,6 +529,10 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
           throw new RuntimeException("Arguments for loading an url are null!");
         }
         root.loadUrl(args.getString(0));
+        break;
+      case COMMAND_RESOLVE_SSL_ERROR:
+        reactWebView = (RNCWebView) root;
+        reactWebView.getRNCWebViewClient().resolveSslError(args.getBoolean(0));
         break;
     }
   }
@@ -591,8 +608,10 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
   protected static class RNCWebViewClient extends WebViewClient {
 
     protected boolean mLastLoadFailed = false;
+    public boolean disableOverrideUrlLoading = false;
     protected @Nullable
     ReadableArray mUrlPrefixesForDefaultIntent;
+    private SslErrorHandler mSslErrorHandler;
 
     @Override
     public void onPageFinished(WebView webView, String url) {
@@ -621,12 +640,14 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
 
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
-      dispatchEvent(
-        view,
-        new TopShouldStartLoadWithRequestEvent(
-          view.getId(),
-          createWebViewEvent(view, url)));
-      return true;
+      if (!disableOverrideUrlLoading) {
+        dispatchEvent(
+          view,
+          new TopShouldStartLoadWithRequestEvent(
+            view.getId(),
+            createWebViewEvent(view, url)));
+      }
+      return !disableOverrideUrlLoading;
     }
 
 
@@ -657,6 +678,37 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
       dispatchEvent(
         webView,
         new TopLoadingErrorEvent(webView.getId(), eventData));
+    }
+    public void resolveSslError(boolean isContinue) {
+      if (mSslErrorHandler == null) return;
+      if (isContinue) {
+        mSslErrorHandler.proceed();
+      } else {
+        mSslErrorHandler.cancel();
+      }
+      mSslErrorHandler = null;
+    }
+    @Override
+    public void onReceivedSslError(WebView webView, final SslErrorHandler handler, SslError error) {
+
+      SslCertificate cert = error.getCertificate();
+      SslCertificate.DName issuedBy = cert.getIssuedBy();
+      SslCertificate.DName issuedTo = cert.getIssuedTo();
+      if (issuedBy.getDName().contentEquals("CN=DigiCert SHA2 Secure Server CA,O=DigiCert Inc,C=US") &&
+        issuedTo.getCName().contentEquals("*.cityline.com") &&
+        issuedTo.getDName().contentEquals("CN=*.cityline.com,O=CityLine (Hong Kong) Ltd,L=Hong Kong,C=HK")) {
+        handler.proceed();
+      } else {
+        if (mSslErrorHandler != null) mSslErrorHandler.cancel();
+        mSslErrorHandler = handler;
+        dispatchEvent(
+          webView,
+          new ReceivedSslError(
+            webView.getId(),
+            createWebViewEvent(webView, webView.getUrl())
+          )
+        );
+      }
     }
 
     protected void emitFinishEvent(WebView webView, String url) {
