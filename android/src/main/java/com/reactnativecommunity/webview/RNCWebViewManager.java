@@ -544,7 +544,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
       "injectJavaScript", COMMAND_INJECT_JAVASCRIPT,
       "loadUrl", COMMAND_LOAD_URL
     );
-    m.put("resolveSslError", COMMAND_RESOLVE_SSL_ERROR);
+    map.put("resolveSslError", COMMAND_RESOLVE_SSL_ERROR);
     map.put("requestFocus", COMMAND_FOCUS);
     return map;
   }
