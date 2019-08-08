@@ -106,6 +106,14 @@ class WebView extends React.Component<AndroidWebViewProps, State> {
     );
   };
 
+  requestFocus = () => {
+    UIManager.dispatchViewManagerCommand(
+        this.getWebViewHandle(),
+        this.getCommands().requestFocus,
+        null,
+    );
+  };
+
   postMessage = (data: string) => {
     UIManager.dispatchViewManagerCommand(
       this.getWebViewHandle(),

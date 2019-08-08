@@ -19,6 +19,7 @@ export interface WebViewCommands {
   injectJavaScript: Function;
   loadUrl: Function;
   resolveSslError: Function;
+  requestFocus: Function;
 }
 
 export interface CustomUIManager extends UIManagerStatic {
@@ -219,6 +220,7 @@ export type OnShouldStartLoadWithRequest = (
 
 export interface CommonNativeWebViewProps extends ViewProps {
   cacheEnabled?: boolean;
+  incognito?: boolean;
   injectedJavaScript?: string;
   mediaPlaybackRequiresUserAction?: boolean;
   messagingEnabled: boolean;
@@ -236,6 +238,10 @@ export interface CommonNativeWebViewProps extends ViewProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   source: any;
   userAgent?: string;
+  /**
+   * Append to the existing user-agent. Overriden if `userAgent` is set.
+   */
+  applicationNameForUserAgent?: string;
 }
 
 export interface AndroidNativeWebViewProps extends CommonNativeWebViewProps {
@@ -267,7 +273,6 @@ export interface IOSNativeWebViewProps extends CommonNativeWebViewProps {
   decelerationRate?: number;
   directionalLockEnabled?: boolean;
   hideKeyboardAccessoryView?: boolean;
-  incognito?: boolean;
   pagingEnabled?: boolean;
   scrollEnabled?: boolean;
   useSharedProcessPool?: boolean;
@@ -386,12 +391,6 @@ export interface IOSWebViewProps extends WebViewSharedProps {
    * @platform ios
    */
   useSharedProcessPool?: boolean;
-
-  /**
-   * Append to the existing user-agent. Overriden if `userAgent` is set.
-   * @platform ios
-   */
-  applicationNameForUserAgent?: string;
 
   /**
    * The custom user agent string.
