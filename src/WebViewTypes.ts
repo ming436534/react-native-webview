@@ -93,6 +93,10 @@ export interface WebViewNativeEvent {
   lockIdentifier: number;
 }
 
+export interface JsAlert {
+  message: string;
+}
+
 export interface WebViewNativeProgressEvent extends WebViewNativeEvent {
   progress: number;
 }
@@ -132,6 +136,8 @@ export type WebViewNavigationEvent = NativeSyntheticEvent<WebViewNavigation>;
 export type WebViewMessageEvent = NativeSyntheticEvent<WebViewMessage>;
 
 export type WebViewErrorEvent = NativeSyntheticEvent<WebViewError>;
+
+export type JsAlertEvent = NativeSyntheticEvent<JsAlert>;
 
 export type DataDetectorTypes
   = | 'phoneNumber'
@@ -241,6 +247,7 @@ export interface AndroidNativeWebViewProps extends CommonNativeWebViewProps {
   javaScriptEnabled?: boolean;
   mixedContentMode?: 'never' | 'always' | 'compatibility';
   onContentSizeChange?: (event: WebViewEvent) => void;
+  onJsAlert?: (event: JsAlertEvent) => void;
   overScrollMode?: OverScrollModeType;
   saveFormDataDisabled?: boolean;
   textZoom?: number;
@@ -545,6 +552,10 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
   * Handle Ssl error, if return true, ignore the error and load the website
  */
   onReceivedSslError?: (event: WebViewErrorEvent) => Promise<boolean>;
+/**
+  * On alert, although the alert will not block the webview anymore
+ */
+  onJsAlert?: (event: JsAlertEvent) => void;
 }
 
 export interface WebViewSharedProps extends ViewProps {

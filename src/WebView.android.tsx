@@ -28,6 +28,7 @@ import {
   NativeWebViewAndroid,
   State,
   CustomUIManager,
+  JsAlertEvent,
 } from './WebViewTypes';
 
 import styles from './WebView.styles';
@@ -152,6 +153,13 @@ class WebView extends React.Component<AndroidWebViewProps, State> {
       onLoadStart(event);
     }
     this.updateNavigationState(event);
+  };
+
+  onJsAlert = (event: JsAlertEvent) => {
+    const { onJsAlert } = this.props;
+    if (onJsAlert) {
+      onJsAlert(event);
+    }
   };
 
   onLoadingError = (event: WebViewErrorEvent) => {
@@ -290,6 +298,7 @@ class WebView extends React.Component<AndroidWebViewProps, State> {
         onLoadingStart={this.onLoadingStart}
         onMessage={this.onMessage}
         onReceivedSslError={this.onReceivedSslError}
+        onJsAlert={this.onJsAlert}
         onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
         ref={this.webViewRef}
         // TODO: find a better way to type this.

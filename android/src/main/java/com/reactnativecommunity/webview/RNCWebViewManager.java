@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -13,6 +14,8 @@ import android.net.http.SslError;
 import android.os.Build;
 import android.os.Environment;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
+
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
@@ -24,6 +27,7 @@ import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
 import android.webkit.GeolocationPermissions;
 import android.webkit.JavascriptInterface;
+import android.webkit.JsResult;
 import android.webkit.SslErrorHandler;
 import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
@@ -33,6 +37,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import com.facebook.react.views.scroll.ScrollEvent;
 import com.facebook.react.views.scroll.ScrollEventType;
@@ -54,6 +59,7 @@ import com.facebook.react.uimanager.annotations.ReactProp;
 import com.facebook.react.uimanager.events.ContentSizeChangeEvent;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcher;
+import com.reactnativecommunity.webview.events.JsAlertEvent;
 import com.reactnativecommunity.webview.events.ReceivedSslError;
 import com.reactnativecommunity.webview.events.TopLoadingErrorEvent;
 import com.reactnativecommunity.webview.events.TopLoadingFinishEvent;
@@ -122,6 +128,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
 
   protected RNCWebChromeClient mWebChromeClient = null;
   protected boolean mAllowsFullscreenVideo = false;
+  protected String userScript;
 
   public RNCWebViewManager() {
     mWebViewConfig = new WebViewConfig() {
@@ -329,6 +336,11 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
     ((RNCWebView) view).setInjectedJavaScript(injectedJavaScript);
   }
 
+  @ReactProp(name = "userScript")
+  public void setUserScript(WebView view, @Nullable String userScript) {
+    this.userScript = userScript;
+  }
+
   @ReactProp(name = "messagingEnabled")
   public void setMessagingEnabled(WebView view, boolean enabled) {
     ((RNCWebView) view).setMessagingEnabled(enabled);
@@ -464,6 +476,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
     export.put(TopLoadingProgressEvent.EVENT_NAME, MapBuilder.of("registrationName", "onLoadingProgress"));
     export.put(TopShouldStartLoadWithRequestEvent.EVENT_NAME, MapBuilder.of("registrationName", "onShouldStartLoadWithRequest"));
     export.put(ReceivedSslError.EVENT_NAME, MapBuilder.of("registrationName", "onReceivedSslError"));
+    export.put(JsAlertEvent.EVENT_NAME, MapBuilder.of("registrationName", "onJsAlert"));
     export.put(ScrollEventType.getJSEventName(ScrollEventType.SCROLL), MapBuilder.of("registrationName", "onScroll"));
     return export;
   }
@@ -755,6 +768,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
 
     protected View mVideoView;
     protected WebChromeClient.CustomViewCallback mCustomViewCallback;
+    boolean isHostDestroyed = false;
 
     public RNCWebChromeClient(ReactContext reactContext, WebView webView) {
       this.mReactContext = reactContext;
@@ -824,6 +838,22 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
 
     @Override
     public void onHostDestroy() { }
+
+    @Override
+    public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
+      result.confirm();
+      WritableMap event = Arguments.createMap();
+      event.putDouble("target", view.getId());
+      event.putString("message", message);
+      dispatchEvent(
+        view,
+        new JsAlertEvent(
+          view.getId(),
+          event
+        )
+      );
+      return true;
+    }
 
     protected ViewGroup getRootView() {
       return (ViewGroup) mReactContext.getCurrentActivity().findViewById(android.R.id.content);
