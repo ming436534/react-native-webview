@@ -10,8 +10,6 @@ import {
   findNodeHandle,
 } from 'react-native';
 
-import invariant from 'invariant';
-
 import {
   defaultOriginWhitelist,
   createOnShouldStartLoadWithRequest,
@@ -72,54 +70,72 @@ class WebView extends React.Component<AndroidWebViewProps, State> {
   getCommands = () => getViewManagerConfig('RNCWebView').Commands;
 
   goForward = () => {
-    UIManager.dispatchViewManagerCommand(
-      this.getWebViewHandle(),
-      this.getCommands().goForward,
-      null,
-    );
+    const h = this.getWebViewHandle();
+    if (h) {
+      UIManager.dispatchViewManagerCommand(
+        this.getWebViewHandle(),
+        this.getCommands().goForward,
+        null,
+      );
+    }
   };
 
   goBack = () => {
-    UIManager.dispatchViewManagerCommand(
-      this.getWebViewHandle(),
-      this.getCommands().goBack,
-      null,
-    );
+    const h = this.getWebViewHandle();
+    if (h) {
+      UIManager.dispatchViewManagerCommand(
+        this.getWebViewHandle(),
+        this.getCommands().goBack,
+        null,
+      );
+    }
   };
 
   reload = () => {
     this.setState({
       viewState: 'LOADING',
     });
-    UIManager.dispatchViewManagerCommand(
-      this.getWebViewHandle(),
-      this.getCommands().reload,
-      null,
-    );
+    const h = this.getWebViewHandle();
+    if (h) {
+      UIManager.dispatchViewManagerCommand(
+        this.getWebViewHandle(),
+        this.getCommands().reload,
+        null,
+      );
+    }
   };
 
   stopLoading = () => {
-    UIManager.dispatchViewManagerCommand(
-      this.getWebViewHandle(),
-      this.getCommands().stopLoading,
-      null,
-    );
+    const h = this.getWebViewHandle();
+    if (h) {
+      UIManager.dispatchViewManagerCommand(
+        this.getWebViewHandle(),
+        this.getCommands().stopLoading,
+        null,
+      );
+    }
   };
 
   requestFocus = () => {
-    UIManager.dispatchViewManagerCommand(
-        this.getWebViewHandle(),
-        this.getCommands().requestFocus,
-        null,
-    );
+    const h = this.getWebViewHandle();
+    if (h) {
+      UIManager.dispatchViewManagerCommand(
+          this.getWebViewHandle(),
+          this.getCommands().requestFocus,
+          null,
+      );
+    }
   };
 
   postMessage = (data: string) => {
-    UIManager.dispatchViewManagerCommand(
-      this.getWebViewHandle(),
-      this.getCommands().postMessage,
-      [String(data)],
-    );
+    const h = this.getWebViewHandle();
+    if (h) {
+      UIManager.dispatchViewManagerCommand(
+        this.getWebViewHandle(),
+        this.getCommands().postMessage,
+        [String(data)],
+      );
+    }
   };
 
   /**
@@ -129,11 +145,14 @@ class WebView extends React.Component<AndroidWebViewProps, State> {
    * functionality, look into postMessage/onMessage.
    */
   injectJavaScript = (data: string) => {
-    UIManager.dispatchViewManagerCommand(
-      this.getWebViewHandle(),
-      this.getCommands().injectJavaScript,
-      [data],
-    );
+    const h = this.getWebViewHandle();
+    if (h) {
+      UIManager.dispatchViewManagerCommand(
+        this.getWebViewHandle(),
+        this.getCommands().injectJavaScript,
+        [data],
+      );
+    }
   };
 
   /**
@@ -151,7 +170,6 @@ class WebView extends React.Component<AndroidWebViewProps, State> {
    */
   getWebViewHandle = () => {
     const nodeHandle = findNodeHandle(this.webViewRef.current);
-    invariant(nodeHandle != null, 'nodeHandle expected to be non-null');
     return nodeHandle as number;
   };
 
@@ -220,11 +238,14 @@ class WebView extends React.Component<AndroidWebViewProps, State> {
     url: string,
   ) => {
     if (shouldStart) {
-      UIManager.dispatchViewManagerCommand(
-        this.getWebViewHandle(),
-        this.getCommands().loadUrl,
-        [String(url)],
-      );
+      const h = this.getWebViewHandle();
+      if (h) {
+        UIManager.dispatchViewManagerCommand(
+          this.getWebViewHandle(),
+          this.getCommands().loadUrl,
+          [String(url)],
+        );
+      }
     }
   };
   
@@ -261,12 +282,13 @@ class WebView extends React.Component<AndroidWebViewProps, State> {
       otherView = (renderLoading || defaultRenderLoading)();
     } else if (this.state.viewState === 'ERROR') {
       const errorEvent = this.state.lastErrorEvent;
-      invariant(errorEvent != null, 'lastErrorEvent expected to be non-null');
-      otherView = (renderError || defaultRenderError)(
-        errorEvent.domain,
-        errorEvent.code,
-        errorEvent.description,
-      );
+      if (errorEvent) {
+        otherView = (renderError || defaultRenderError)(
+          errorEvent.domain,
+          errorEvent.code,
+          errorEvent.description,
+        );
+      }
     } else if (this.state.viewState !== 'IDLE') {
       console.error(
         `RNCWebView invalid state encountered: ${this.state.viewState}`,

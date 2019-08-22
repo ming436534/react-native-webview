@@ -8,7 +8,6 @@ import {
   findNodeHandle,
   ImageSourcePropType,
 } from 'react-native';
-import invariant from 'invariant';
 
 import {
   defaultOriginWhitelist,
@@ -123,22 +122,28 @@ class WebView extends React.Component<IOSWebViewProps, State> {
    * Go forward one page in the web view's history.
    */
   goForward = () => {
-    UIManager.dispatchViewManagerCommand(
-      this.getWebViewHandle(),
-      this.getCommands().goForward,
-      null,
-    );
+    const h = this.getWebViewHandle();
+    if (h) {
+      UIManager.dispatchViewManagerCommand(
+        this.getWebViewHandle(),
+        this.getCommands().goForward,
+        null,
+      );
+    }
   };
 
   /**
    * Go back one page in the web view's history.
    */
   goBack = () => {
-    UIManager.dispatchViewManagerCommand(
-      this.getWebViewHandle(),
-      this.getCommands().goBack,
-      null,
-    );
+    const h = this.getWebViewHandle();
+    if (h) {
+      UIManager.dispatchViewManagerCommand(
+        this.getWebViewHandle(),
+        this.getCommands().goBack,
+        null,
+      );
+    }
   };
 
   /**
@@ -146,33 +151,42 @@ class WebView extends React.Component<IOSWebViewProps, State> {
    */
   reload = () => {
     this.setState({ viewState: 'LOADING' });
-    UIManager.dispatchViewManagerCommand(
-      this.getWebViewHandle(),
-      this.getCommands().reload,
-      null,
-    );
+    const h = this.getWebViewHandle();
+    if (h) {
+      UIManager.dispatchViewManagerCommand(
+        this.getWebViewHandle(),
+        this.getCommands().reload,
+        null,
+      );
+    }
   };
 
   /**
    * Stop loading the current page.
    */
   stopLoading = () => {
-    UIManager.dispatchViewManagerCommand(
-      this.getWebViewHandle(),
-      this.getCommands().stopLoading,
-      null,
-    );
+    const h = this.getWebViewHandle();
+    if (h) {
+      UIManager.dispatchViewManagerCommand(
+        this.getWebViewHandle(),
+        this.getCommands().stopLoading,
+        null,
+      );
+    }
   };
 
   /**
    * Request focus on WebView rendered page.
    */
   requestFocus = () => {
-    UIManager.dispatchViewManagerCommand(
-        this.getWebViewHandle(),
-        this.getCommands().requestFocus,
-        null,
-    );
+    const h = this.getWebViewHandle();
+    if (h) {
+      UIManager.dispatchViewManagerCommand(
+          this.getWebViewHandle(),
+          this.getCommands().requestFocus,
+          null,
+      );
+    }
   };
 
   /**
@@ -186,11 +200,14 @@ class WebView extends React.Component<IOSWebViewProps, State> {
    * ```
    */
   postMessage = (data: string) => {
-    UIManager.dispatchViewManagerCommand(
-      this.getWebViewHandle(),
-      this.getCommands().postMessage,
-      [String(data)],
-    );
+    const h = this.getWebViewHandle();
+    if (h) {
+      UIManager.dispatchViewManagerCommand(
+        this.getWebViewHandle(),
+        this.getCommands().postMessage,
+        [String(data)],
+      );
+    }
   };
 
   /**
@@ -200,11 +217,14 @@ class WebView extends React.Component<IOSWebViewProps, State> {
    * functionality, look into postMessage/onMessage.
    */
   injectJavaScript = (data: string) => {
-    UIManager.dispatchViewManagerCommand(
-      this.getWebViewHandle(),
-      this.getCommands().injectJavaScript,
-      [data],
-    );
+    const h = this.getWebViewHandle();
+    if (h) {
+      UIManager.dispatchViewManagerCommand(
+        this.getWebViewHandle(),
+        this.getCommands().injectJavaScript,
+        [data],
+      );
+    }
   };
 
   /**
@@ -222,7 +242,6 @@ class WebView extends React.Component<IOSWebViewProps, State> {
    */
   getWebViewHandle = () => {
     const nodeHandle = findNodeHandle(this.webViewRef.current);
-    invariant(nodeHandle != null, 'nodeHandle expected to be non-null');
     return nodeHandle as number;
   };
 
@@ -291,8 +310,9 @@ class WebView extends React.Component<IOSWebViewProps, State> {
     } else {
       viewManager = viewManager || RNCUIWebViewManager;
     }
-    invariant(viewManager != null, 'viewManager expected to be non-null');
-    viewManager.startLoadWithResult(!!shouldStart, lockIdentifier);
+    if (viewManager) {
+      viewManager.startLoadWithResult(!!shouldStart, lockIdentifier);
+    }
   };
 
   componentDidUpdate(prevProps: IOSWebViewProps) {
@@ -344,12 +364,13 @@ class WebView extends React.Component<IOSWebViewProps, State> {
       otherView = (renderLoading || defaultRenderLoading)();
     } else if (this.state.viewState === 'ERROR') {
       const errorEvent = this.state.lastErrorEvent;
-      invariant(errorEvent != null, 'lastErrorEvent expected to be non-null');
-      otherView = (renderError || defaultRenderError)(
-        errorEvent.domain,
-        errorEvent.code,
-        errorEvent.description,
-      );
+      if (errorEvent) {
+        otherView = (renderError || defaultRenderError)(
+          errorEvent.domain,
+          errorEvent.code,
+          errorEvent.description,
+        );
+      }
     } else if (this.state.viewState !== 'IDLE') {
       console.error(
         `RNCWebView invalid state encountered: ${this.state.viewState}`,
