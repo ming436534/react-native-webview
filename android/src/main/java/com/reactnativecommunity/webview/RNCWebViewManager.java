@@ -383,6 +383,10 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
   public void setDisableOverrideUrlLoading(WebView view, @Nullable Boolean isDisable) {
     ((RNCWebView) view).getRNCWebViewClient().disableOverrideUrlLoading = isDisable;
   }
+  @ReactProp(name = "webContentsDebuggingEnabled")
+  public void setWebContentsDebuggingEnabled(WebView view, @Nullable Boolean isEnable) {
+    WebView.setWebContentsDebuggingEnabled(isEnable);
+  }
    
   @ReactProp(name = "incognito")
   public void setIncognito(WebView view, boolean enabled) {
