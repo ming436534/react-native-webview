@@ -362,6 +362,9 @@ static NSURLCredential* clientAuthenticationCredential;
        didReceiveScriptMessage:(WKScriptMessage *)message
 {
   if (_onMessage != nil) {
+    if ([message.body rangeOfString:@"FORCE_TRIGGER_LOAD_END"].location != NSNotFound) {
+      [self webView:_webView didFinishNavigation:nil];
+    }
     NSMutableDictionary<NSString *, id> *event = [self baseEvent];
     [event addEntriesFromDictionary: @{@"data": message.body}];
     _onMessage(event);
