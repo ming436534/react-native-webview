@@ -35,7 +35,6 @@ import styles from './WebView.styles';
 const UIManager = NotTypedUIManager as CustomUIManager;
 
 const { resolveAssetSource } = Image;
-let didWarnAboutUIWebViewUsage = false;
 // Imported from https://github.com/facebook/react-native/blob/master/Libraries/Components/ScrollView/processDecelerationRate.js
 const processDecelerationRate = (
   decelerationRate: DecelerationRateConstant | number | undefined,
@@ -276,11 +275,6 @@ class WebView extends React.Component<IOSWebViewProps, State> {
     this.showRedboxOnPropChanges(prevProps, 'mediaPlaybackRequiresUserAction');
     this.showRedboxOnPropChanges(prevProps, 'dataDetectorTypes');
 
-    if (this.props.scalesPageToFit !== undefined) {
-      console.warn(
-        'The scalesPageToFit property is not supported when useWebKit = true',
-      );
-    }
   }
 
   showRedboxOnPropChanges(
@@ -303,7 +297,6 @@ class WebView extends React.Component<IOSWebViewProps, State> {
       originWhitelist,
       renderError,
       renderLoading,
-      scalesPageToFit = undefined,
       style,
       ...otherProps
     } = this.props;
@@ -356,7 +349,6 @@ class WebView extends React.Component<IOSWebViewProps, State> {
         onScroll={this.props.onScroll}
         onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
         ref={this.webViewRef}
-        scalesPageToFit={scalesPageToFit}
         // TODO: find a better way to type this.
         source={resolveAssetSource(this.props.source as ImageSourcePropType)}
         style={webViewStyles}
