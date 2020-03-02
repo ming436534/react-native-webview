@@ -33,13 +33,7 @@ export interface CustomUIManager extends UIManagerStatic {
     command: Function,
     params: object | null,
   ) => void;
-  RNCUIWebView: {
-    Commands: WebViewCommands;
-  };
   RNCWKWebView: {
-    Commands: WebViewCommands;
-  };
-  RNCWebView: {
     Commands: WebViewCommands;
   };
 }
@@ -280,11 +274,6 @@ export interface IOSNativeWebViewProps extends CommonNativeWebViewProps {
 }
 
 export interface IOSWebViewProps extends WebViewSharedProps {
-  /**
-   * If true, use WKWebView instead of UIWebView.
-   * @platform ios
-   */
-  useWebKit?: boolean;
 
   /**
    * Does not store any data within the lifetime of the WebView.
@@ -652,15 +641,6 @@ export interface WebViewSharedProps extends ViewProps {
    * shown in the `WebView`. The default value is `true`.
    */
   showsVerticalScrollIndicator?: boolean;
-
-  /**
-   * Boolean that controls whether the web content is scaled to fit
-   * the view and enables the user to change the scale. The default value
-   * is `true`.
-   *
-   * On iOS, when `useWebKit=true`, this prop will not work.
-   */
-  scalesPageToFit?: boolean;
 
   /**
    * Boolean that determines whether HTML5 audio and video requires the user
