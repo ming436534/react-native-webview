@@ -766,21 +766,15 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
       SslCertificate cert = error.getCertificate();
       SslCertificate.DName issuedBy = cert.getIssuedBy();
       SslCertificate.DName issuedTo = cert.getIssuedTo();
-      if (issuedBy.getDName().contentEquals("CN=DigiCert SHA2 Secure Server CA,O=DigiCert Inc,C=US") &&
-        issuedTo.getCName().contentEquals("*.cityline.com") &&
-        issuedTo.getDName().contentEquals("CN=*.cityline.com,O=CityLine (Hong Kong) Ltd,L=Hong Kong,C=HK")) {
-        handler.proceed();
-      } else {
-        if (mSslErrorHandler != null) mSslErrorHandler.cancel();
-        mSslErrorHandler = handler;
-        dispatchEvent(
-          webView,
-          new ReceivedSslError(
-            webView.getId(),
-            createWebViewEvent(webView, webView.getUrl())
-          )
-        );
-      }
+      if (mSslErrorHandler != null) mSslErrorHandler.cancel();
+      mSslErrorHandler = handler;
+      dispatchEvent(
+        webView,
+        new ReceivedSslError(
+          webView.getId(),
+          createWebViewEvent(webView, webView.getUrl())
+        )
+      );
     }
 
     protected void emitFinishEvent(WebView webView, String url) {
