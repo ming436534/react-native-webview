@@ -36,6 +36,9 @@ export interface CustomUIManager extends UIManagerStatic {
   RNCWKWebView: {
     Commands: WebViewCommands;
   };
+  RNCWebView: {
+    Commands: WebViewCommands;
+  };
 }
 
 type WebViewState = 'IDLE' | 'LOADING' | 'ERROR';
