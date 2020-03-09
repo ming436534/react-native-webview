@@ -240,6 +240,7 @@ static NSURLCredential* clientAuthenticationCredential;
       _webView.scrollView.contentInsetAdjustmentBehavior = _savedContentInsetAdjustmentBehavior;
     }
 #endif
+    [_webView addObserver:self forKeyPath:@"loading" options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:@"webview"];
 
     [self addSubview:_webView];
     [self setHideKeyboardAccessoryView: _savedHideKeyboardAccessoryView];
@@ -314,14 +315,30 @@ static NSURLCredential* clientAuthenticationCredential;
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context{
+  
+  if ([keyPath isEqual:@"loading"] && !_webView.loading) {
+        if (_injectedJavaScript) {
+          [self evaluateJS: _injectedJavaScript thenCall: ^(NSString *jsEvaluationValue) {
+            NSMutableDictionary *event = [self baseEvent];
+            event[@"jsEvaluationValue"] = jsEvaluationValue;
+
+            if (self.onLoadingFinish) {
+              self.onLoadingFinish(event);
+            }
+          }];
+        } else if (_onLoadingFinish) {
+          _onLoadingFinish([self baseEvent]);
+        }
+        //[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+    }
     if ([keyPath isEqual:@"estimatedProgress"] && object == self.webView) {
         if(_onLoadingProgress){
              NSMutableDictionary<NSString *, id> *event = [self baseEvent];
             [event addEntriesFromDictionary:@{@"progress":[NSNumber numberWithDouble:self.webView.estimatedProgress]}];
             _onLoadingProgress(event);
         }
-    }else{
-        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+        
+        //[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }
 }
 
@@ -850,18 +867,7 @@ static NSURLCredential* clientAuthenticationCredential;
 - (void)      webView:(WKWebView *)webView
   didFinishNavigation:(WKNavigation *)navigation
 {
-  if (_injectedJavaScript) {
-    [self evaluateJS: _injectedJavaScript thenCall: ^(NSString *jsEvaluationValue) {
-      NSMutableDictionary *event = [self baseEvent];
-      event[@"jsEvaluationValue"] = jsEvaluationValue;
-
-      if (self.onLoadingFinish) {
-        self.onLoadingFinish(event);
-      }
-    }];
-  } else if (_onLoadingFinish) {
-    _onLoadingFinish([self baseEvent]);
-  }
+  
 
   [self setBackgroundColor: _savedBackgroundColor];
 }
